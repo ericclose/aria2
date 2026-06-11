@@ -1,6 +1,9 @@
 name: build
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -100,3 +103,12 @@ jobs:
     - name: Build aria2
       run: |
         make -j"$(nproc 2> /dev/null || sysctl -n hw.ncpu)" check
+    - name: Prepare binary for upload
+      run: |
+        cp src/aria2c "aria2c-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.crypto }}-${{ matrix.bittorrent }}"
+    - name: Distribute to GitHub Releases
+      uses: softprops/action-gh-release@v3
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: aria2c-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.crypto }}-${{ matrix.bittorrent }}
+
