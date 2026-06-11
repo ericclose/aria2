@@ -73,10 +73,14 @@ jobs:
         autoreconf -i
     - name: Setup compiler flags
       run: |
-        asanflags="-fsanitize=address,undefined -fno-sanitize-recover=undefined"
-
-        CPPFLAGS="$asanflags -g3"
-        LDFLAGS="$asanflags"
+        if [ "${{ matrix.os }}" = "macos-14" ]; then
+          CPPFLAGS="-O3"
+          LDFLAGS=""
+        else
+          asanflags="-fsanitize=address,undefined -fno-sanitize-recover=undefined"
+          CPPFLAGS="$asanflags -g3"
+          LDFLAGS="$asanflags"
+        fi
 
         echo 'CPPFLAGS='"$CPPFLAGS" >> $GITHUB_ENV
         echo 'LDFLAGS='"$LDFLAGS" >> $GITHUB_ENV
@@ -99,6 +103,7 @@ jobs:
       run: |
         ./configure \
           --without-openssl --without-gnutls --with-appletls \
+          --without-libssh2 --without-libcares \
           --disable-nls
     - name: Build aria2
       run: |
